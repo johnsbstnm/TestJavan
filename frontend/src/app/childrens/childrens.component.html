@@ -1,5 +1,8 @@
 <mat-card>
     <mat-card-content>
+      <div class="mb-3">
+        <button mat-raised-button color="primary" (click)="addData()">tambah data</button>
+      </div>
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 demo-table w-100">
         <!-- Position Column -->
         <ng-container matColumnDef="no">
@@ -27,7 +30,9 @@
         <ng-container matColumnDef="action">
           <th mat-header-cell *matHeaderCellDef>Aksi</th>
           <td mat-cell *matCellDef="let element">
-              <button mat-raised-button color="primary" (click)="seeDetail(element.children_id)">Lihat aset</button>
+              <button mat-raised-button color="primary" (click)="seeDetail(element.children_id)" class="mr-2">Lihat aset</button>
+              <button mat-raised-button color="accent" (click)="edit(element)" class="mr-2">edit data</button>
+              <button mat-raised-button color="warn" (click)="deleteConfirmation(element)">Hapus data</button>
           </td>
         </ng-container>
   

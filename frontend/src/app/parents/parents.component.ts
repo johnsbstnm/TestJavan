@@ -45,24 +45,24 @@ export class ParentsComponent implements OnInit {
           console.log(`Data saved`);
           setTimeout(() => {
             this.fetchData();
-          }, 3000);
+          }, 1000);
         });
       }
     });
   }
 
-  deleteConfirmation(itemId: number) {
+  deleteConfirmation(item: any) {
     if (confirm('Yakin untuk delete?')) {
-      return this.doDelete(itemId);
+      return this.doDelete(item);
     }
   }
 
-  doDelete(itemId) {
-    this.service.deleteItem(itemId).subscribe(() => {
+  doDelete(item: any) {
+    this.service.deleteItem(item).subscribe(() => {
       console.log(`Data deleted`);
       setTimeout(() => {
         this.fetchData();
-      }, 3000);
+      }, 1000);
     });
   }
 
@@ -70,7 +70,7 @@ export class ParentsComponent implements OnInit {
     const dialogRef = this.dialog.open(AddDataDialogComponent, {data: {type: 'parent', existingData: item}, width: '30vw'});
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.service.updateItem(item.parent_id, result.name, result.gender, result.type).subscribe(() => {
+        this.service.updateItem(item.parent_id, result.name, result.gender, 0, result.type).subscribe(() => {
           console.log(`Data saved`);
           setTimeout(() => {
             this.fetchData();

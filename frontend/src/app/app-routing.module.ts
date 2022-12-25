@@ -9,7 +9,8 @@ const routes: Routes = [
   {path: 'parents', component: ParentsComponent},
   {path: 'childrens', component: ChildrensComponent},
   {path: 'assets/:type/:itemId', component: AssetDetailComponent},
-  {path: 'calculation', component: CalculationComponent}
+  {path: 'calculation', component: CalculationComponent},
+  {path: '**', redirectTo: 'parents'},
 ]
 
 @NgModule({

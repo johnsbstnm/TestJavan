@@ -24,10 +24,11 @@ app.post('/items', async (req, res) => {
         console.log(req.body);
         const {name, gender, type, parent_id} = req.body;
         let newItem = null;
+        const isDeleted = 0;
         if (type === 'parent') {
-            newItem = new Parent({name, gender});
+            newItem = new Parent({name, gender, isDeleted});
         } else if (type === 'children') {
-            newItem = new Children({name, gender, parent_id});
+            newItem = new Children({name, gender, parent_id, isDeleted});
         }
         if (newItem === null) {
             throw new Error('newItem variable cannot be null!');
@@ -62,7 +63,7 @@ app.get('/items/:type', async (req, res) => {
         if (result === null) {
             throw new Error('result variable cannot be null!');
         }
-        res.json(result);
+        res.json(result.filter((item) => !item.isDeleted));
     } catch (error) {
         console.error(`Error happened`, error.message);
         res.status(500).send(`Error while trying to execute function.`);
@@ -77,18 +78,18 @@ app.get('/item/:type/:itemId', async (req, res) => {
         if (type === 'parent') {
             result = await Parent.findOne({where: {parent_id: itemId}, raw: true});
             const parentProducts = [];
-            const assignmentIds = await ParentProduct.findAll({where: {parents_parent_id: itemId}, raw: true});
+            const assignmentIds = await ParentProduct.findAll({where: {parents_parent_id: itemId, isDeleted: 0}, raw: true});
             for (const assignmentId of assignmentIds) {
                 const product = await Product.findOne({where: {item_id: assignmentId.items_item_id}, raw: true});
                 if (product) {
-                    parentProducts.push(product);
+                    parentProducts.push({...product, assignmentId: assignmentId});
                 }
             }
             result.assignedProducts = parentProducts;
         } else if (type === 'children') {
             result = await Children.findOne({where: {children_id: itemId}, raw: true});
             const childrenProducts = [];
-            const assignmentIds = await ChildrenProduct.findAll({where: {childrens_children_id: itemId}, raw: true});
+            const assignmentIds = await ChildrenProduct.findAll({where: {childrens_children_id: itemId, isDeleted: 0}, raw: true});
             for (const assignmentId of assignmentIds) {
                 const product = await Product.findOne({where: {item_id: assignmentId.items_item_id}, raw: true});
                 if (product) {
@@ -125,12 +126,12 @@ app.delete('/item/:type/:itemId', async (req, res) => {
 
 app.put('/item/:itemId', async (req, res) => {
     try {
-        const {name, gender, type} = req.body;
+        const {name, gender, type, isDeleted} = req.body;
         const itemId = req.params.itemId;
         if (type === 'parent') {
-            await Parent.update({name, gender}, {where: {parent_id: itemId}});
+            await Parent.update({name, gender, isDeleted}, {where: {parent_id: itemId}});
         } else if (type === 'children') {
-            await Children.update({name, gender}, {where: {children_id: itemId}});
+            await Children.update({name, gender, isDeleted}, {where: {children_id: itemId}});
         }
         res.json({updatedItem: itemId});
     } catch (error) {
@@ -139,7 +140,7 @@ app.put('/item/:itemId', async (req, res) => {
     }
 });
 
-app.get('/products/', async (req, res) => {
+app.get('/products', async (req, res) => {
     try {
         const products = await productService.getProducts(null);
         res.json(products);
@@ -149,31 +150,35 @@ app.get('/products/', async (req, res) => {
     }
 });
 
-app.post('/assignItem', async (req, res) => {
+app.post('/asset', async (req, res) => {
     try {
-        const {itemId, type, productIds, parentId} = req.body;
+        const {itemId, type, productIds} = req.body;
         for (const productId of productIds) {
             const getProduct = await productService.getProducts(productId);
             if (getProduct) {
-                const newProduct = new Product({
-                    item_name: getProduct.title,
-                    price: getProduct.price,
-                    product_id: getProduct.id,
-                });
+                let newProduct = await Product.findOne({where: {product_id: productId}});
+                if (!newProduct) {
+                    newProduct = new Product({
+                        item_name: getProduct.title,
+                        price: getProduct.price,
+                        product_id: getProduct.id,
+                    });
+                }
                 await newProduct.save();
                 if (type === 'parent') {
                     const newParentProduct = new ParentProduct({
-                        item_id: newProduct.productId,
-                        parent_id: itemId,
+                        items_item_id: newProduct.item_id,
+                        parents_parent_id: itemId,
+                        isDeleted: 0,
                     })
-                    newParentProduct.save();
+                    await newParentProduct.save();
                 } else if (type === 'children') {
                     const newChildrenProduct = new ChildrenProduct({
-                        item_id: newProduct.productId,
-                        children_id: itemId,
-                        parent_id: parentId,
+                        items_item_id: newProduct.item_id,
+                        childrens_children_id: itemId,
+                        isDeleted: 0,
                     })
-                    newChildrenProduct.save();
+                    await newChildrenProduct.save();
                 }
             }
         }
@@ -184,11 +189,18 @@ app.post('/assignItem', async (req, res) => {
     }
 });
 
-app.delete('/deleteItemAssignment/:assignmentId', async (req, res) => {
+app.put('/asset', async (req, res) => {
     try {
-        const assignmentId = req.params.assignmentId;
-        await Product.destroy({where: {item_id: assignmentId}});
-        res.json({deletedItem: itemId});
+        const assignmentId = req.body.assignmentId;
+        const type = req.body.type;
+        console.log(`assignmentId`, assignmentId);
+        console.log(`type`, type);
+        if (type === 'parent') {
+            await ParentProduct.update({isDeleted: 1}, {where: {parents_item_id: assignmentId}});
+        } else if (type === 'children') {
+            await ChildrenProduct.update({isDeleted: 1}, {where: {childrens_item_id: assignmentId}});
+        }
+        res.json({deletedItem: assignmentId});
     } catch (error) {
         console.error(`Error happened`, error.message);
         res.status(500).send(`Error while trying to execute function.`);

@@ -32,7 +32,7 @@
         <td mat-cell *matCellDef="let element">
             <button mat-raised-button color="primary" (click)="seeDetail(element.parent_id)" class="mr-2">Lihat aset</button>
             <button mat-raised-button color="accent" (click)="edit(element)" class="mr-2">edit data</button>
-            <button mat-raised-button color="warn" (click)="deleteConfirmation(element.parent_id)">Hapus data</button>
+            <button mat-raised-button color="warn" (click)="deleteConfirmation(element)">Hapus data</button>
         </td>
       </ng-container>
 

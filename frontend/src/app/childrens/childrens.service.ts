@@ -8,7 +8,21 @@ export class ChildrensService {
 
   constructor(private httpClient: HttpClient) { }
 
-  getItems() {
-    return this.httpClient.get(`http://localhost:5000/items/children`);
+  getItems(type: string) {
+    return this.httpClient.get(`http://localhost:5000/items/${type}`);
+  }
+
+  saveItem(name: string, gender: string, parent_id: number) {
+    const isDeleted = 0;
+    const type = 'children';
+    return this.httpClient.post(`http://localhost:5000/items`, {name, gender, parent_id, isDeleted, type});
+  }
+
+  deleteItem(item: any) {
+    return this.updateItem(item.children_id, item.name, item.gender, item.parent_id, 1, 'children');
+  }
+
+  updateItem(itemId: string, name: string, gender: string, parent_id: number, isDeleted: number, type: string) {
+    return this.httpClient.put(`http://localhost:5000/item/${itemId}`, {name, gender, parent_id, isDeleted, type});
   }
 }

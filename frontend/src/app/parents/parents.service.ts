@@ -16,11 +16,11 @@ export class ParentsService {
     return this.httpClient.post(`http://localhost:5000/items`, {name, gender, type})
   }
 
-  deleteItem(itemId: string) {
-    return this.httpClient.delete(`http://localhost:5000/item/parent/${itemId}`);
+  deleteItem(item: any) {
+    return this.updateItem(item.parent_id, item.name, item.gender, 1, 'parent');
   }
 
-  updateItem(itemId: string, name: string, gender: string, type: string) {
-    return this.httpClient.put(`http://localhost:5000/item/${itemId}`, {name, gender, type});
+  updateItem(itemId: string, name: string, gender: string, isDeleted: number, type: string) {
+    return this.httpClient.put(`http://localhost:5000/item/${itemId}`, {name, gender, isDeleted, type});
   }
 }

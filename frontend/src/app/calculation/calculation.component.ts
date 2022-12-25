@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { CalculationService } from './calculation.service';
 import {Chart, registerables} from 'node_modules/chart.js';
 Chart.register(...registerables);
@@ -8,7 +8,7 @@ Chart.register(...registerables);
   templateUrl: './calculation.component.html',
   styleUrls: ['./calculation.component.css']
 })
-export class CalculationComponent implements OnInit {
+export class CalculationComponent implements OnInit, AfterViewInit {
 
   parentChartLabel = [];
   parentChartData = [];
@@ -17,6 +17,9 @@ export class CalculationComponent implements OnInit {
   childrenChartLabel = [];
   childrenChartData = [];
   childrenBgColor = [];
+
+  displayedColumns = ['position', 'assetName', 'assetTotal'];
+  dataSource = [];
 
   constructor(private service: CalculationService) { }
 
@@ -65,7 +68,17 @@ export class CalculationComponent implements OnInit {
       this.childrenBgColor = result.map((val) => val.backgroundColor);
       this.renderPieChart();
     });
-    
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      console.log(`parent chart data`, this.parentChartData);
+      this.dataSource = [
+        {position: 1, name: 'Total asset orang tua', total: this.parentChartData.reduce((partial, a) => partial + a, 0)},
+        {position: 2, name: 'Total asset orang tua', total: this.childrenChartData.reduce((partial, a) => partial + a, 0)},
+        {position: 3, name: 'Total asset keluarga', total: this.childrenChartData.reduce((partial, a) => partial + a, 0) + this.parentChartData.reduce((partial, a) => partial + a, 0)}
+      ];
+    }, 2000);
   }
 
   renderBarChart() {
